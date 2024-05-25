@@ -125,17 +125,27 @@ async function run() {
 
     app.put('/user', async (req, res) => {
       const user = req.body
-      const options = { upsert: true }
-      const updatedDc = {
-        $set: {
-          ...user,
-          timeStamp: Date.now(),
-        },
-      }
 
-      const query = { email: user?.email }
-      const result = await usersCollection.updateOne(query, updatedDc, options)
-      res.send(result)
+      const isExist = await usersCollection.findOne({ email: user?.email })
+      if (isExist) {
+        return res.send(isExist)
+      } else {
+        const options = { upsert: true }
+        const updatedDc = {
+          $set: {
+            ...user,
+            timeStamp: Date.now(),
+          },
+        }
+
+        const query = { email: user?.email }
+        const result = await usersCollection.updateOne(
+          query,
+          updatedDc,
+          options
+        )
+        res.send(result)
+      }
     })
 
     // delete a room
