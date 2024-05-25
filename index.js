@@ -53,6 +53,7 @@ async function run() {
   try {
     // Collections
     const roomsCollection = client.db('stayvista').collection('rooms')
+    const usersCollection = client.db('stayvista').collection('users')
 
     // auth related api
     app.post('/jwt', async (req, res) => {
@@ -117,6 +118,23 @@ async function run() {
       const id = req.params.id
       const query = { _id: new ObjectId(id) }
       const result = await roomsCollection.findOne(query)
+      res.send(result)
+    })
+
+    // save a user
+
+    app.put('/user', async (req, res) => {
+      const user = req.body
+      const options = { upsert: true }
+      const updatedDc = {
+        $set: {
+          ...user,
+          timeStamp: Date.now(),
+        },
+      }
+
+      const query = { email: user?.email }
+      const result = await usersCollection.updateOne(query, updatedDc, options)
       res.send(result)
     })
 
