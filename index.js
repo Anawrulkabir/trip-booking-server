@@ -95,6 +95,13 @@ async function run() {
       res.send(result)
     })
 
+    // save a room data form database
+    app.post('/room', async (req, res) => {
+      const roomData = req.body
+      const result = await roomsCollection.insertOne(roomData)
+      res.send(result)
+    })
+
     // Get single room data form db using _id
     app.get('/room/:id', async (req, res) => {
       const id = req.params.id
