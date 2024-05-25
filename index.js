@@ -95,6 +95,16 @@ async function run() {
       res.send(result)
     })
 
+    // get all rooms for host account
+    app.get('/my-listings/:email', async (req, res) => {
+      const email = req.params.email
+
+      let query = { 'host.email': email }
+
+      const result = await roomsCollection.find(query).toArray()
+      res.send(result)
+    })
+
     // save a room data form database
     app.post('/room', async (req, res) => {
       const roomData = req.body
