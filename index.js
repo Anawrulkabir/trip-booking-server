@@ -125,8 +125,9 @@ async function run() {
 
     app.put('/user', async (req, res) => {
       const user = req.body
+      const query = { email: user?.email }
 
-      const isExist = await usersCollection.findOne({ email: user?.email })
+      const isExist = await usersCollection.findOne(query)
       if (isExist) {
         return res.send(isExist)
       } else {
@@ -138,7 +139,6 @@ async function run() {
           },
         }
 
-        const query = { email: user?.email }
         const result = await usersCollection.updateOne(
           query,
           updatedDc,
@@ -146,6 +146,12 @@ async function run() {
         )
         res.send(result)
       }
+    })
+
+    // get all users from db
+    app.get('/users', async (req, res) => {
+      const result = await usersCollection.find().toArray()
+      res.send(result)
     })
 
     // delete a room
