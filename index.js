@@ -1,4 +1,5 @@
 const express = require('express')
+import { format } from 'date-fns'
 const app = express()
 require('dotenv').config()
 const cors = require('cors')
@@ -144,7 +145,7 @@ async function run() {
       const updatedDc = {
         $set: {
           ...user,
-          timeStamp: format(new Date(), 'EEE dd MMM, yyyy h:mm a'),
+          timeStamp: format(Date.now(), 'EEE dd MMM, yyyy h:mm a'),
         },
       }
       const result = await usersCollection.updateOne(query, updatedDc, options)
