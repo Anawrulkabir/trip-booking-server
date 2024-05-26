@@ -134,9 +134,9 @@ async function run() {
             $set: { status: user?.status },
           })
           return res.send(result)
+        } else {
+          return res.send(isExist)
         }
-      } else {
-        return res.send(isExist)
       }
 
       // save a user  for the first time
