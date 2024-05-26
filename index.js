@@ -144,7 +144,7 @@ async function run() {
       const updatedDc = {
         $set: {
           ...user,
-          timeStamp: Date.now(),
+          timeStamp: format(new Date(), 'EEE dd MMM, yyyy h:mm a'),
         },
       }
       const result = await usersCollection.updateOne(query, updatedDc, options)
