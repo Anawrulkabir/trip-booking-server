@@ -131,11 +131,13 @@ async function run() {
 
       if (isExist) {
         if (user.status === 'Requested') {
+          // existing user change his role
           const result = await usersCollection.updateOne(query, {
             $set: { status: user?.status },
           })
           return res.send(result)
         } else {
+          // existing user login again
           return res.send(isExist)
         }
       }
