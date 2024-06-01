@@ -1,5 +1,5 @@
 const express = require('express')
-import { format } from 'date-fns'
+// import { format } from 'date-fns'
 const app = express()
 require('dotenv').config()
 const cors = require('cors')
@@ -34,7 +34,7 @@ const verifyToken = async (req, res, next) => {
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
     if (err) {
       console.log(err)
-      return res.status(401).send({ message: 'unauthorized access!!!' })
+      return res.status(401).send({ message: 'unauthorized access' })
     }
     req.user = decoded
     next()
@@ -58,11 +58,12 @@ async function run() {
 
     // verify admin middleware
     const verifyAdmin = async (req, res, next) => {
+      console.log('hello')
       const user = req.user
       const query = { email: user?.email }
       const result = await usersCollection.findOne(query)
-      if (!result || result?.role === 'admin')
-        return res.status(401).send({ message: 'Unauthorized Access!' })
+      if (!result || result?.role !== 'admin')
+        return res.status(401).send({ message: 'Unauthorized Access!!' })
 
       next()
     }
