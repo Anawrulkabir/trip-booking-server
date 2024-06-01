@@ -1,5 +1,4 @@
 const express = require('express')
-// import { format } from 'date-fns'
 const app = express()
 require('dotenv').config()
 const cors = require('cors')
@@ -11,11 +10,7 @@ const port = process.env.PORT || 8000
 
 // middleware
 const corsOptions = {
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'https://stayvista-ba29a.web.app',
-  ],
+  origin: ['http://localhost:5173', 'http://localhost:5174'],
   credentials: true,
   optionSuccessStatus: 200,
 }
@@ -52,18 +47,17 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Collections
     const roomsCollection = client.db('stayvista').collection('rooms')
     const usersCollection = client.db('stayvista').collection('users')
-
     // verify admin middleware
     const verifyAdmin = async (req, res, next) => {
       console.log('hello')
       const user = req.user
       const query = { email: user?.email }
       const result = await usersCollection.findOne(query)
+      console.log(result?.role)
       if (!result || result?.role !== 'admin')
-        return res.status(401).send({ message: 'Unauthorized Access!!' })
+        return res.status(401).send({ message: 'unauthorized access!!' })
 
       next()
     }
@@ -71,11 +65,12 @@ async function run() {
     const verifyHost = async (req, res, next) => {
       console.log('hello')
       const user = req.user
-      console.log(user.role)
       const query = { email: user?.email }
       const result = await usersCollection.findOne(query)
-      if (!result || result?.role !== 'host')
-        return res.status(401).send({ message: 'Unauthorized Access!!' })
+      console.log(result?.role)
+      if (!result || result?.role !== 'host') {
+        return res.status(401).send({ message: 'unauthorized access!!' })
+      }
 
       next()
     }
@@ -110,83 +105,35 @@ async function run() {
       }
     })
 
-    // Get all rooms from db
-    app.get('/rooms', async (req, res) => {
-      let query = {}
-      const category = req?.query?.category
-      if (category && category !== 'null') {
-        query = { category: category }
-      }
-      const result = await roomsCollection.find(query).toArray()
-      res.send(result)
-    })
-
-    // get all rooms for host account
-    app.get(
-      '/my-listings/:email',
-      verifyToken,
-      verifyHost,
-      async (req, res) => {
-        const email = req.params.email
-
-        let query = { 'host.email': email }
-
-        const result = await roomsCollection.find(query).toArray()
-        res.send(result)
-      }
-    )
-
-    // save a room data form database
-    app.post('/room', verifyToken, verifyHost, async (req, res) => {
-      const roomData = req.body
-      const result = await roomsCollection.insertOne(roomData)
-      res.send(result)
-    })
-
-    // Get single room data form db using _id
-    app.get('/room/:id', async (req, res) => {
-      const id = req.params.id
-      const query = { _id: new ObjectId(id) }
-      const result = await roomsCollection.findOne(query)
-      res.send(result)
-    })
-    // delete a room
-    app.delete('/room/:id', verifyToken, verifyHost, async (req, res) => {
-      const id = req.params.id
-      const query = { _id: new ObjectId(id) }
-      const result = await roomsCollection.deleteOne(query)
-      res.send(result)
-    })
-
-    // save a user in db
+    // save a user data in db
     app.put('/user', async (req, res) => {
       const user = req.body
+
       const query = { email: user?.email }
-
+      // check if user already exists in db
       const isExist = await usersCollection.findOne(query)
-
       if (isExist) {
         if (user.status === 'Requested') {
-          // existing user change his role
+          // if existing user try to change his role
           const result = await usersCollection.updateOne(query, {
             $set: { status: user?.status },
           })
           return res.send(result)
         } else {
-          // existing user login again
+          // if existing user login again
           return res.send(isExist)
         }
       }
 
-      // save a user  for the first time
+      // save user for the first time
       const options = { upsert: true }
-      const updatedDc = {
+      const updateDoc = {
         $set: {
           ...user,
-          timeStamp: format(Date.now(), 'EEE dd MMM, yyyy h:mm a'),
+          timestamp: Date.now(),
         },
       }
-      const result = await usersCollection.updateOne(query, updatedDc, options)
+      const result = await usersCollection.updateOne(query, updateDoc, options)
       res.send(result)
     })
 
@@ -197,29 +144,73 @@ async function run() {
       res.send(result)
     })
 
-    // get all users from db
+    // get all users data from db
     app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
       const result = await usersCollection.find().toArray()
       res.send(result)
     })
 
-    // Update user role
+    //update a user role
     app.patch('/users/update/:email', async (req, res) => {
       const email = req.params.email
       const user = req.body
       const query = { email }
-      const updatedDoc = {
-        $set: {
-          ...user,
-          timeStamp: format(Date.now(), 'EEE dd MMM, yyyy h:mm a'),
-        },
+      const updateDoc = {
+        $set: { ...user, timestamp: Date.now() },
       }
-      const result = await usersCollection.updateOne(query, updatedDoc)
+      const result = await usersCollection.updateOne(query, updateDoc)
+      res.send(result)
+    })
+
+    // Get all rooms from db
+    app.get('/rooms', async (req, res) => {
+      const category = req.query.category
+      console.log(category)
+      let query = {}
+      if (category && category !== 'null') query = { category }
+      const result = await roomsCollection.find(query).toArray()
+      res.send(result)
+    })
+
+    // Save a room data in db
+    app.post('/room', verifyToken, verifyHost, async (req, res) => {
+      const roomData = req.body
+      const result = await roomsCollection.insertOne(roomData)
+      res.send(result)
+    })
+
+    // get all rooms for host
+    app.get(
+      '/my-listings/:email',
+      verifyToken,
+      verifyHost,
+      async (req, res) => {
+        const email = req.params.email
+
+        let query = { 'host.email': email }
+        const result = await roomsCollection.find(query).toArray()
+        res.send(result)
+      }
+    )
+
+    // delete a room
+    app.delete('/room/:id', verifyToken, verifyHost, async (req, res) => {
+      const id = req.params.id
+      const query = { _id: new ObjectId(id) }
+      const result = await roomsCollection.deleteOne(query)
+      res.send(result)
+    })
+
+    // Get a single room data from db using _id
+    app.get('/room/:id', async (req, res) => {
+      const id = req.params.id
+      const query = { _id: new ObjectId(id) }
+      const result = await roomsCollection.findOne(query)
       res.send(result)
     })
 
     // Send a ping to confirm a successful connection
-    // await client.db('admin').command({ ping: 1 })
+    await client.db('admin').command({ ping: 1 })
     console.log(
       'Pinged your deployment. You successfully connected to MongoDB!'
     )
