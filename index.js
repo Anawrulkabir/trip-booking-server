@@ -47,8 +47,11 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    const roomsCollection = client.db('stayvista').collection('rooms')
-    const usersCollection = client.db('stayvista').collection('users')
+    // db collections
+    const db = client.db('stayvista')
+    const roomsCollection = db.collection('rooms')
+    const usersCollection = db.collection('users')
+    const bookingsCollection = db.collection('bookings')
     // verify admin middleware
     const verifyAdmin = async (req, res, next) => {
       console.log('hello')
@@ -111,7 +114,7 @@ async function run() {
       const priceInCent = parseFloat(price) * 100
       if (!price || priceInCent < 1) return
       // generate clientSecret
-      const { client_secret } = await stripe.paymentIntent.create({
+      const { client_secret } = await stripe.paymentIntents.create({
         amount: priceInCent,
         currency: 'usd',
         // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
@@ -119,7 +122,6 @@ async function run() {
           enabled: true,
         },
       })
-
       // send client secret as response
       res.send({ clientSecret: client_secret })
     })
@@ -195,6 +197,42 @@ async function run() {
     app.post('/room', verifyToken, verifyHost, async (req, res) => {
       const roomData = req.body
       const result = await roomsCollection.insertOne(roomData)
+      res.send(result)
+    })
+    // Save a booking data in db
+    app.post('/booking', verifyToken, async (req, res) => {
+      // save booking info
+      const bookingsData = req.body
+      const result = await bookingsCollection.insertOne(bookingsData)
+
+      // change room availability status
+      // const roomId = bookingsData.roomId
+      // const query = { _id: new ObjectId(roomId) }
+      // const updatedDoc = {
+      //   $set: {
+      //     booked: true,
+      //   },
+      // }
+      // const updatedRoom = await roomsCollection.updateOne(query, updatedDoc)
+      // console.log(updatedRoom)
+      // res.send({ result, updatedRoom })
+
+      res.send(result)
+    })
+
+    // update room status
+    app.patch('/room/status/:id', async (req, res) => {
+      const id = req.params.id
+      const status = req.body.status
+
+      // change room availability status
+      const query = { _id: new ObjectId(id) }
+      const updatedDoc = {
+        $set: {
+          booked: status,
+        },
+      }
+      const result = await roomsCollection.updateOne(query, updatedDoc)
       res.send(result)
     })
 
