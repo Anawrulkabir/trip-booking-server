@@ -282,6 +282,20 @@ async function run() {
       const result = await bookingsCollection.find(query).toArray()
       res.send(result)
     })
+    // get all bookings for a host
+    app.get(
+      '/manage-bookings/:email',
+      verifyToken,
+      verifyHost,
+      async (req, res) => {
+        const email = req.params.email
+        const query = {
+          'host.email': email,
+        }
+        const result = await bookingsCollection.find(query).toArray()
+        res.send(result)
+      }
+    )
 
     // Send a ping to confirm a successful connection
     await client.db('admin').command({ ping: 1 })
