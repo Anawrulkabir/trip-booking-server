@@ -342,8 +342,6 @@ async function run() {
         totalPrice,
         chartData,
       })
-
-      res.send(bookingDetails)
     })
     // Host statistics
     app.get('/host-stat', verifyToken, verifyHost, async (req, res) => {
@@ -388,8 +386,6 @@ async function run() {
         chartData,
         hostSince: timestamp,
       })
-
-      res.send(bookingDetails)
     })
 
     // Send a ping to confirm a successful connection
