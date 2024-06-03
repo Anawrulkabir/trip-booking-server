@@ -19,8 +19,8 @@ app.use(cors(corsOptions))
 app.use(express.json())
 app.use(cookieParser())
 
-// Send email by nodemailer
-const sendEmail = async (emailAddress, emailData) => {
+// send email
+const sendEmail = (emailAddress, emailData) => {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     host: 'smtp.gmail.com',
@@ -32,6 +32,7 @@ const sendEmail = async (emailAddress, emailData) => {
     },
   })
 
+  // verify transporter
   // verify connection configuration
   transporter.verify(function (error, success) {
     if (error) {
@@ -40,19 +41,18 @@ const sendEmail = async (emailAddress, emailData) => {
       console.log('Server is ready to take our messages')
     }
   })
-
-  const emailBody = {
+  const mailBody = {
     from: `"StayVista" <${process.env.TRANSPORTER_EMAIL}>`, // sender address
     to: emailAddress, // list of receivers
     subject: emailData.subject, // Subject line
     html: emailData.message, // html body
   }
 
-  const info = await transporter.sendMail(emailBody, (error, info) => {
+  transporter.sendMail(mailBody, (error, info) => {
     if (error) {
       console.log(error)
     } else {
-      console.log('Email Sent : ' + info.response)
+      console.log('Email Sent: ' + info.response)
     }
   })
 }
@@ -237,21 +237,22 @@ async function run() {
       const result = await roomsCollection.insertOne(roomData)
       res.send(result)
     })
+
     // Save a booking data in db
     app.post('/booking', verifyToken, async (req, res) => {
       // save booking info
-      const bookingsData = req.body
-      const result = await bookingsCollection.insertOne(bookingsData)
+      const bookingData = req.body
+      const result = await bookingsCollection.insertOne(bookingData)
 
       // send email to guest
-      sendEmail(bookingsData?.guest?.email, {
+      sendEmail(bookingData?.guest?.email, {
         subject: 'Booking Successful!',
-        message: `You've successfully booked a room through stayvista. Tansaction id : ${bookingsData.transactionId}`,
+        message: `You've successfully booked a room through stayvista. Tansaction id : ${bookingData.transactionId}`,
       })
       // send email to host
-      sendEmail(bookingsData?.host?.email, {
+      sendEmail(bookingData?.host?.email, {
         subject: 'Your room has been booked',
-        message: `Get ready to welcome ${bookingsData.guest.name}.`,
+        message: `Get ready to welcome ${bookingData?.host?.name}.`,
       })
 
       res.send(result)
