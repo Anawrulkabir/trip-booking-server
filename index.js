@@ -220,6 +220,19 @@ async function run() {
       res.send(result)
     })
 
+    // update room data
+    app.put('/room/update/:id', verifyToken, verifyHost, async (req, res) => {
+      const roomData = req.body
+      const id = req.params.id
+      const query = { _id: new ObjectId(id) }
+      const updatedDoc = {
+        $set: roomData,
+      }
+
+      const result = await roomsCollection.updateOne(query, updatedDoc)
+      res.send(result)
+    })
+
     // update room status
     app.patch('/room/status/:id', async (req, res) => {
       const id = req.params.id
