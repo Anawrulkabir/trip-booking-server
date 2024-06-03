@@ -240,19 +240,18 @@ async function run() {
 
     // Save a booking data in db
     app.post('/booking', verifyToken, async (req, res) => {
-      // save booking info
       const bookingData = req.body
+      // save room booking info
       const result = await bookingsCollection.insertOne(bookingData)
-
       // send email to guest
       sendEmail(bookingData?.guest?.email, {
         subject: 'Booking Successful!',
-        message: `You've successfully booked a room through stayvista. Tansaction id : ${bookingData.transactionId}`,
+        message: `You've successfully booked a room through StayVista. Transaction Id: ${bookingData.transactionId}`,
       })
       // send email to host
       sendEmail(bookingData?.host?.email, {
-        subject: 'Your room has been booked',
-        message: `Get ready to welcome ${bookingData?.host?.name}.`,
+        subject: 'Your room got booked!',
+        message: `Get ready to welcome ${bookingData.guest.name}.`,
       })
 
       res.send(result)
