@@ -297,6 +297,23 @@ async function run() {
       }
     )
 
+    // Admin statistics
+    app.get('/admin-stat', verifyToken, verifyAdmin, async (req, res) => {
+      const bookingDetails = await bookingsCollection
+        .find(
+          {},
+          {
+            projection: {
+              date: 1,
+              price: 1,
+            },
+          }
+        )
+        .toArray()
+
+      res.send(bookingDetails)
+    })
+
     // Send a ping to confirm a successful connection
     await client.db('admin').command({ ping: 1 })
     console.log(
