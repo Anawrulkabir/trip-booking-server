@@ -365,9 +365,9 @@ async function run() {
         (sum, booking) => sum + booking.price,
         0
       )
-      const { timestamp } = await usersCollection.findOne(
+      const { timeStamp } = await usersCollection.findOne(
         { email },
-        { projection: { timestamp: 1 } }
+        { projection: { timeStamp: 1 } }
       )
 
       const chartData = bookingDetails.map((booking) => {
