@@ -387,7 +387,7 @@ async function run() {
         totalBookings: bookingDetails.length,
         totalPrice,
         chartData,
-        hostSince: timestamp,
+        hostSince: timeStamp,
       })
     })
 
