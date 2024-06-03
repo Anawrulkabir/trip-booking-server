@@ -257,6 +257,13 @@ async function run() {
       const result = await roomsCollection.deleteOne(query)
       res.send(result)
     })
+    // delete a booking
+    app.delete('/booking/:id', verifyToken, async (req, res) => {
+      const id = req.params.id
+      const query = { _id: new ObjectId(id) }
+      const result = await bookingsCollection.deleteOne(query)
+      res.send(result)
+    })
 
     // Get a single room data from db using _id
     app.get('/room/:id', async (req, res) => {
