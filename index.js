@@ -343,7 +343,7 @@ async function run() {
         chartData,
       })
     })
-    // Host statistics
+    // Host Statistics
     app.get('/host-stat', verifyToken, verifyHost, async (req, res) => {
       const { email } = req.user
       const bookingDetails = await bookingsCollection
@@ -369,6 +369,7 @@ async function run() {
         { email },
         { projection: { timestamp: 1 } }
       )
+
       const chartData = bookingDetails.map((booking) => {
         const day = new Date(booking.date).getDate()
         const month = new Date(booking.date).getMonth() + 1
@@ -378,7 +379,9 @@ async function run() {
       chartData.unshift(['Day', 'Sales'])
       // chartData.splice(0, 0, ['Day', 'Sales'])
 
-      // console.log(chartData)
+      console.log(chartData)
+
+      console.log(bookingDetails)
       res.send({
         totalRooms,
         totalBookings: bookingDetails.length,
