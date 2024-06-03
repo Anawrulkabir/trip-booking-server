@@ -298,7 +298,7 @@ async function run() {
     )
 
     // Admin statistics
-    app.get('/admin-stat', verifyToken, verifyAdmin, async (req, res) => {
+    app.get('/admin-stat', async (req, res) => {
       const bookingDetails = await bookingsCollection
         .find(
           {},
@@ -310,6 +310,20 @@ async function run() {
           }
         )
         .toArray()
+
+      const totalUsers = await usersCollection.countDocuments()
+      const totalRooms = await roomsCollection.countDocuments()
+      const totalPrice = bookingDetails.reduce(
+        (sum, booking) => sum + booking.price,
+        0
+      )
+
+      res.send({
+        totalUsers,
+        totalRooms,
+        totalBookings: bookingDetails.length,
+        totalPrice,
+      })
 
       res.send(bookingDetails)
     })
