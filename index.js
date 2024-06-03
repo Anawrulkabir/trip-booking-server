@@ -347,7 +347,7 @@ async function run() {
     })
     // Host statistics
     app.get('/host-stat', verifyToken, verifyHost, async (req, res) => {
-      const { email } = req.user.email
+      const { email } = req.user
       const bookingDetails = await bookingsCollection
         .find(
           { 'host.email': email },
