@@ -19,6 +19,44 @@ app.use(cors(corsOptions))
 app.use(express.json())
 app.use(cookieParser())
 
+// Send email by nodemailer
+const sendEmail = async (emailAddress, emailData) => {
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // Use `true` for port 465, `false` for all other ports
+    auth: {
+      user: process.env.TRANSPORTER_EMAIL,
+      pass: process.env.TRANSPORTER_PASS,
+    },
+  })
+
+  // verify connection configuration
+  transporter.verify(function (error, success) {
+    if (error) {
+      console.log(error)
+    } else {
+      console.log('Server is ready to take our messages')
+    }
+  })
+
+  const emailBody = {
+    from: `"StayVista" <${process.env.TRANSPORTER_EMAIL}>`, // sender address
+    to: emailAddress, // list of receivers
+    subject: emailData.subject, // Subject line
+    html: emailData.message, // html body
+  }
+
+  const info = await transporter.sendMail(emailBody, (error, info) => {
+    if (error) {
+      console.log(error)
+    } else {
+      console.log('Email Sent : ' + info.response)
+    }
+  })
+}
+
 // Verify Token Middleware
 const verifyToken = async (req, res, next) => {
   const token = req.cookies?.token
@@ -205,17 +243,16 @@ async function run() {
       const bookingsData = req.body
       const result = await bookingsCollection.insertOne(bookingsData)
 
-      // change room availability status
-      // const roomId = bookingsData.roomId
-      // const query = { _id: new ObjectId(roomId) }
-      // const updatedDoc = {
-      //   $set: {
-      //     booked: true,
-      //   },
-      // }
-      // const updatedRoom = await roomsCollection.updateOne(query, updatedDoc)
-      // console.log(updatedRoom)
-      // res.send({ result, updatedRoom })
+      // send email to guest
+      sendEmail(bookingsData?.guest?.email, {
+        subject: 'Booking Successful!',
+        message: `You've successfully booked a room through stayvista. Tansaction id : ${bookingsData.transactionId}`,
+      })
+      // send email to host
+      sendEmail(bookingsData?.host?.email, {
+        subject: 'Your room has been booked',
+        message: `Get ready to welcome ${bookingsData.guest.name}.`,
+      })
 
       res.send(result)
     })
